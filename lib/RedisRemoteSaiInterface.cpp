@@ -14,7 +14,9 @@
 #include "meta/PerformanceIntervalTimer.h"
 #include "meta/Globals.h"
 
-#include "config.h"
+// TOOD BL: We need to generate this via stamping, so I figured we should name it differently
+// #include "config.h"
+#include "config.bazel.h"
 
 #include <inttypes.h>
 
