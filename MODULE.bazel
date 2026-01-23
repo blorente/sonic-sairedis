@@ -1,0 +1,93 @@
+module(name = "sonic-sairedis")
+
+bazel_dep(name = "rules_perl", version = "0.5.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_shell", version = "0.6.1")
+bazel_dep(name = "bazel_lib", version = "3.1.1")
+bazel_dep(name = "rules_doxygen", version = "2.6.1")
+
+doxygen_extension = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")
+# TODO BL: defined in SAI/meta/Makefile. Later versions need a compat layer.
+# Version in commit 30f57a5ae9a3109673b77ef06e23b98112574680 of //SAI git submodule
+# TODO BL: IF we just use the latest version, we get a bunch of warnings about obsolote tags.
+# TODO BL: I had to install libclang9 to make this work.
+doxygen_extension.configuration(
+  # version = "1.9.1",
+  # sha256 = "8aa8da80baca22aa98fb05ed86e3ed7be7821ffd8073fc7dbc9b0ed2606e2825",
+  # version = "1.9.8",
+  # sha256 = "dda773bdc62384b7d796fe8b6c5029daad72483e4c8ad4abf6ee9fb98b649388",
+
+  # TODO BL: Make this nicer
+  # Let's try with doxygen 1.8.16, downloaded from sourceforge
+  # Source: https://sourceforge.net/projects/doxygen/files/rel-1.8.16
+  executable = "//:doxygen_bin",
+  # version = "1.8.16",
+  # sha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+)
+use_repo(doxygen_extension, "doxygen")
+
+bazel_dep(name = "sonic-build-infra", version = "0.0.0")
+local_path_override(
+    module_name = "sonic-build-infra",
+    path = "../sonic-build-infra"
+)
+
+register_toolchains("@sonic-build-infra//toolchains/gcc:host_gcc_toolchain")
+
+bazel_dep(name = "rules_distroless", version = "0.0.0")
+local_path_override(
+    module_name = "rules_distroless",
+    path = "../../bazel-contrib/rules_distroless"
+)
+
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+
+apt.sources_list(
+    architectures = ["amd64"],
+    components = ["main"],
+    suites = ["bookworm", "bookworm-updates"],
+    uris = ["https://snapshot.debian.org/archive/debian/20251001T023456Z"],
+)
+
+apt.sources_list(
+    architectures = ["amd64"],
+    components = ["main"],
+    suites = ["bookworm-security"],
+    uris = ["https://snapshot.debian.org/archive/debian-security/20251001T023456Z"],
+)
+
+bazel_dep(name = "sonic-swss-common", version = "0.0.0", repo_name = "sonic_swss_common")
+local_path_override(
+    module_name = "sonic-swss-common",
+    path = "../../sonic-net/sonic-swss-common",
+)
+
+
+# sudo apt-get install -y
+# make libtool m4 autoconf dh-exec debhelper cmake pkg-config
+# nlohmann-json3-dev libhiredis-dev libnl-3-dev libnl-genl-3-dev
+# libnl-route-3-dev libnl-nf-3-dev swig3.0 libpython2.7-dev libboost-dev
+# libboost-serialization-dev uuid-dev libzmq3-dev
+
+apt.install(
+    dependency_set = "bookworm",
+    suites = ["bookworm", "bookworm-updates"],
+    packages = [
+        # For this repo
+        "libhiredis-dev",
+        "libzmq3-dev",
+        "python3-dev",
+        "libboost-dev",
+        "libboost-serialization-dev",
+        "nlohmann-json3-dev",
+        
+        # For SAI
+        "doxygen",
+        "graphviz",
+        "aspell",
+    ]
+)
+
+apt.lock(into = ":packages.lock")
+
+use_repo(apt, "bookworm")

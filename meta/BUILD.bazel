@@ -1,0 +1,89 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON")
+
+AM_CFLAGS = [] # $(SAIINC)
+AM_CXXFLAGS = [] # $(SAIINC) -I$(top_srcdir)/lib
+
+cc_library(
+  name = "saimetadata",
+  srcs = [
+    "//SAI/meta:saimetadata.c",
+    "//SAI/meta:saimetadatautils.c",
+    "//SAI/meta:saiserialize.c",
+    "//SAI/meta:deps",
+  ],
+  hdrs = [
+    "//SAI/meta:all_headers",
+  ],
+  includes = [
+    "../SAI/inc",
+    "../SAI/meta",
+    "../SAI/experimental",
+    "../SAI/custom",
+  ],
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CFLAGS + ["-ansi"] + CODE_COVERAGE_CFLAGS,
+)
+
+filegroup(
+  name = "all_headers",
+  srcs = glob(["*.h"]),
+)
+
+cc_library(
+  name = "saimeta",
+  srcs = [
+    "AttrKeyMap.cpp",
+    "Globals.cpp",
+    "Meta.cpp",
+    "MetaKeyHasher.cpp",
+    "Notification.cpp",
+    "NotificationFactory.cpp",
+    "NotificationFdbEvent.cpp",
+    "NotificationNatEvent.cpp",
+    "NotificationPortStateChange.cpp",
+    "NotificationQueuePfcDeadlock.cpp",
+    "NotificationSwitchAsicSdkHealthEvent.cpp",
+    "NotificationSwitchShutdownRequest.cpp",
+    "NotificationSwitchStateChange.cpp",
+    "NotificationBfdSessionStateChange.cpp",
+    "NotificationTwampSessionEvent.cpp",
+    "NotificationPortHostTxReadyEvent.cpp",
+    "NumberOidIndexGenerator.cpp",
+    "OidRefCounter.cpp",
+    "PerformanceIntervalTimer.cpp",
+    "PortRelatedSet.cpp",
+    "RedisSelectableChannel.cpp",
+    "SaiAttrWrapper.cpp",
+    "SaiAttributeList.cpp",
+    "SaiInterface.cpp",
+    "SaiObject.cpp",
+    "SaiObjectCollection.cpp",
+    "SaiSerialize.cpp",
+    "SelectableChannel.cpp",
+    "ZeroMQSelectableChannel.cpp",
+    # Headers from lib to break dependency cycles between meta and lib
+    "//lib:all_headers",
+  ],
+  hdrs = [
+    ":all_headers",
+  ],
+  includes = [
+    "../lib",
+    # TODO BL: Some headers in `sonic-swss` want to include these headers without the meta/ prefix.
+    #          To allow that, we need to add `-isystem <execroot>/<sairedis path>/meta` to the CLI,
+    #          and this is the way we accomplish that.
+    #          The alternative would be to prefix every header with `meta`.
+    #          (e.g. `sai_serialize.h` becomes `meta/sai_serialize.h`)
+    "../meta",
+  ],
+  deps = [
+    "@bookworm//libhiredis-dev:libhiredis",
+    "@sonic_swss_common//:libswsscommon",
+    ":saimetadata",
+  ] + CODE_COVERAGE_LIBS,
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+)
+
