@@ -208,4 +208,3 @@ cc_library(
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
 )
 
-# TODO BL: Implement `tests` binary if we need to

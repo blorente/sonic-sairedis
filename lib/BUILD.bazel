@@ -53,23 +53,6 @@ cc_library(
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
 )
 
-# TODO BL: Delete if not needed.
-#run_binary(
-#  name = "sai_redis.cpp.gen",
-#  tool = "//:stub",
-#  args = [
-#    "-d", "SAI", # TODO BL: We run this from the execroot, not the directory of the run_binary. We should document it.
-#    "-c", "ClientServerSai",
-#    "-n", "sairedis",
-#    "-f", "$(execpath sai_redis.cpp)",
-#    "-s", "stub",
-#    "-b", "lib",
-#  ],
-#  outs = [
-#    "sai_redis.cpp",
-#  ],
-#)
-
 cc_library(
   name = "sairedis",
   srcs = [
@@ -143,12 +126,3 @@ cc_library(
   cxxopts = CODE_COVERAGE_CPPFLAGS,
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
 )
-
-# TODO BL: Consider creating the tests binary
-# bin_PROGRAMS = tests
-#
-# tests_SOURCES = tests.cpp
-# tests_CXXFLAGS = $(DBGFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS_COMMON)
-# tests_LDADD = -lhiredis -lswsscommon -lpthread -L$(top_srcdir)/meta/.libs -lsaimetadata -lsaimeta libsairedis.la -lzmq
-#
-# TESTS = tests
