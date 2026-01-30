@@ -1,4 +1,4 @@
-package(default_visibility = ["//visibility:public"]) #TODO BL: This is probably too much visibility
+package(default_visibility = ["//visibility:public"])
 
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@bazel_lib//lib:run_binary.bzl", "run_binary")
