@@ -126,3 +126,11 @@ cc_library(
   cxxopts = CODE_COVERAGE_CPPFLAGS,
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
 )
+
+cc_test(
+  name = "tests",
+  srcs = ["tests.cpp"],
+  deps = [":sairedis"],
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON,
+)
+
