@@ -1,0 +1,37 @@
+# TODO BL: trim these loads
+load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON", "CFLAGS_ASAN")
+
+AM_CXXFLAGS = [] #$(SAIINC) -I$(top_srcdir)/syncd -I$(top_srcdir)/lib -I$(top_srcdir)/vslib
+# 
+# LDADD_GTEST = -L/usr/src/gtest -lgtest -lgtest_main
+
+
+cc_test(
+  name = "tests",
+  srcs = glob([
+    "*.cpp",
+    "*.h",
+  ]),
+  data = glob([
+    "brcm/*.ini",
+    "mlnx/*.ini",
+    "nvda-bf/*.ini",
+  ]),
+  includes = [".."], # TODO BL: we need this to inlude raw headers from syncd, but there has to be a better way
+  cxxopts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON,
+  deps = [
+    "//syncd:libsyncd",
+    "//syncd:libsyncd_request_shutdown",
+    "//meta:saimeta",
+    "//vslib:saivs",
+    "@sonic_swss_common//:libswsscommon",
+    "@com_google_googletest//:gtest",
+    "@com_google_googletest//:gtest_main",
+  ] + CODE_COVERAGE_LIBS,
+)
+# tests_LDADD = \
+#     $(top_srcdir)/syncd/libSyncd.a $(top_srcdir)/lib/libSaiRedis.a $(top_srcdir)/syncd/libSyncdRequestShutdown.a \
+#     -L$(top_srcdir)/meta/.libs -L$(top_srcdir)/vslib/.libs \
+#     -lhiredis -lpthread -lzmq $(CODE_COVERAGE_LIBS)
+# 
+# TESTS = tests

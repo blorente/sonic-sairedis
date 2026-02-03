@@ -5,6 +5,32 @@ load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@bazel_lib//lib:write_source_files.bzl", "write_source_file")
 
+config_setting(
+    name = "debug_mode",
+    values = {"compilation_mode": "dbg"},
+)
+
+config_setting(
+    name = "asan",
+    define_values = {"asan": "true"},
+)
+
+# TODO BL: There has to be a better way of representing this, with platforms or such
+config_setting(
+    name = "saivs",
+    define_values = {"saivs": "true"},
+)
+
+config_setting(
+    name = "dashsai",
+    define_values = {"dashsai": "true"},
+)
+
+config_setting(
+    name = "saithrift",
+    define_values = {"saithrift": "true"},
+)
+
 copy_to_directory(
   name = "swss_common_headers",
   srcs = ["@sonic_swss_common//:hdrs"],

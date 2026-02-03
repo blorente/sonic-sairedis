@@ -28,7 +28,9 @@
 
 #include "vslib/saivs.h"
 
-#include "config.h"
+// TODO BL: Make this compatible
+// #include "config.h"
+#include "config.bazel.h"
 
 #include <unistd.h>
 #include <inttypes.h>

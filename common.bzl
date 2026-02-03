@@ -60,3 +60,14 @@ CODE_COVERAGE_CPPFLAGS = []
 CODE_COVERAGE_CXXFLAGS = []
 CODE_COVERAGE_LIBS = []
 DBGFLAGS = []
+
+# TODO BL: only enable if asan is enabled
+CFLAGS_ASAN = [
+  "-fsanitize=address",
+  "-DASAN_ENABLED",
+  "-ggdb -fno-omit-frame-pointer -U_FORTIFY_SOURCE",
+  "-Wno-maybe-uninitialized",
+]
+
+# TODO BL: Figure out where to get these from with selects
+EXTRA_LIBSAI_FLAGS = []

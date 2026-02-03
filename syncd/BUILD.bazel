@@ -1,0 +1,205 @@
+load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON", "CFLAGS_ASAN", "EXTRA_LIBSAI_FLAGS")
+
+AM_CXXFLAGS = [] # $(SAIINC) -I$(top_srcdir)/lib -I$(top_srcdir)/vslib
+ 
+# lib_LTLIBRARIES = libMdioIpcClient.la
+# 
+# noinst_LIBRARIES = libSyncd.a libSyncdRequestShutdown.a libMdioIpcClient.a
+# 
+filegroup(
+  name = "headers",
+  srcs = glob(["*.h"]),
+)
+
+libsyncd_srcs = [
+  "AsicOperation.cpp",
+  "AsicView.cpp",
+  "BestCandidateFinder.cpp",
+  "BreakConfig.cpp",
+  "BreakConfigParser.cpp",
+  "CommandLineOptions.cpp",
+  "CommandLineOptionsParser.cpp",
+  "ComparisonLogic.cpp",
+  "FlexCounter.cpp",
+  "FlexCounterManager.cpp",
+  "GlobalSwitchId.cpp",
+  "HardReiniter.cpp",
+  "MdioIpcServer.cpp",
+  "MetadataLogger.cpp",
+  "NotificationHandler.cpp",
+  "NotificationProcessor.cpp",
+  "NotificationQueue.cpp",
+  "PortMap.cpp",
+  "PortMapParser.cpp",
+  "PortStateChangeHandler.cpp",
+  "RedisClient.cpp",
+  "RedisNotificationProducer.cpp",
+  "RequestShutdownCommandLineOptions.cpp",
+  "SaiAttr.cpp",
+  "SaiDiscovery.cpp",
+  "SaiObj.cpp",
+  "SaiSwitch.cpp",
+  "SaiSwitchInterface.cpp",
+  "ServiceMethodTable.cpp",
+  "SingleReiniter.cpp",
+  "SwitchNotifications.cpp",
+  "Syncd.cpp",
+  "TimerWatchdog.cpp",
+  "VendorSai.cpp",
+  "VidManager.cpp",
+  "VirtualOidTranslator.cpp",
+  "WarmRestartTable.cpp",
+  "WatchdogScope.cpp",
+  "Workaround.cpp",
+  "ZeroMQNotificationProducer.cpp",
+  "syncd_main.cpp",
+  "//:config",
+]
+
+libsyncd_copts = select({
+   "//:asan": ["-DASAN_ENABLED"],
+   "//conditions:default": [],
+}) + DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+
+libsyncd_deps = select({
+  "//:vslib": ["//vslib:saivs"],
+  "//conditions:default": [],
+}) + [
+  "//meta:saimeta",
+]
+
+libsyncd_cxxopts = CODE_COVERAGE_CPPFLAGS
+
+cc_library(
+  name = "libsyncd",
+  srcs = libsyncd_srcs,
+  hdrs = [":headers"],
+  includes = ["syncd"],
+  copts = libsync_copts,
+# TODO BL: How does this work?
+# if SAIVS
+# SAILIB=-L$(top_srcdir)/vslib/.libs -lsaivs
+# else
+# SAILIB=-lsai
+# endif
+  deps = libsyncd_deps,
+  cxxopts = libsyncd_cxxopts,
+  visibility = ["//syncd:__subpackages__"],
+)
+
+cc_binary(
+  name = "syncd",
+  srcs = select({
+     "//:asan": [
+         "Asan.cpp",
+     ],
+     "//conditions:default": [],
+  }) + [
+    "main.cpp",
+  ],
+  deps = [
+    ":libsyncd",
+    "//lib:sairedis",
+    "//meta:saimeta",
+  ] + CODE_COVERAGE_LIBS,
+  linkopts = [
+    "-rdynamic",
+  ] + EXTRA_LIBSAI_FLAGS,
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = select({
+     "//:asan": CFLAGS_ASAN,
+     "//conditions:default": [],
+  }) + DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+)
+
+# if SAITHRIFT
+# libSyncd_a_CXXFLAGS += -DSAITHRIFT=yes
+# syncd_CXXFLAGS += -DSAITHRIFT=yes
+# syncd_LDADD += -lrpcserver -lthrift
+# endif
+# 
+# if SONIC_ASIC_PLATFORM_BROADCOM
+# libSyncd_a_CXXFLAGS += -DMDIO_ACCESS_USE_NPU
+# endif
+# 
+cc_library(
+  name = "libsyncd_request_shutdown",
+  srcs = [
+    "RequestShutdown.cpp",
+    "RequestShutdownCommandLineOptions.cpp",
+    "RequestShutdownCommandLineOptionsParser.cpp",
+    ":headers",
+  ],
+  deps = [
+    "//meta:saimeta",
+  ],
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+  visibility = ["//syncd:__subpackages__"],
+)
+
+cc_binary(
+  name = "syncd_request_shutdown",
+  srcs = ["syncd_request_shutdown.cpp"],
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+  deps = [
+    ":libsyncd_request_shutdown",
+    "//lib:sairedis",
+  ] + CODE_COVERAGE_LIBS,
+)
+
+libmdio_ipc_client_srcs = ["MdioIpcClient.cpp", "MdioIpcClient.h", "MdioIpcCommon.h"]
+libmdio_ipc_client_cxxopts = CODE_COVERAGE_CPPFLAGS + ["-Wno-format-truncation"]
+libmdio_ipc_client_copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS
+libmdio_ipc_client_deps = ["//lib:sairedis"]
+
+cc_library(
+  name = "libmdio_ipc_client.a",
+  srcs = libmdio_ipc_client_srcs,
+  deps = libmdio_ipc_client_deps,
+  cxxopts = libmdio_ipc_client_cxxopts,
+  copts = libmdio_ipc_client_copts,
+  linkstatic = True,
+)
+
+cc_library(
+  name = "libmdio_ipc_client.la",
+  srcs = libmdio_ipc_client_srcs,
+  cxxopts = libmdio_ipc_client_cxxopts,
+  copts = libmdio_ipc_client_copts,
+  deps = [
+    "@sonic_swss_common//:libswsscommon",
+  ] + libmdio_ipc_client_deps,
+  linkstatic = False,
+)
+
+cc_test(
+  name = "tests",
+  srcs = ["tests.cpp"],
+  linkopts = [
+    # syncd_tests_LDFLAGS = -Wl,-rpath,$(top_srcdir)/lib/.libs -Wl,-rpath,$(top_srcdir)/meta/.libs
+  ],
+  deps = [
+    ":libsyncd",
+# syncd_tests_LDADD = libSyncd.a -lhiredis -lswsscommon -lpthread -L$(top_srcdir)/lib/.libs -lsairedis \
+# 			  -L$(top_srcdir)/meta/.libs -lsaimetadata -lsaimeta -lzmq $(CODE_COVERAGE_LIBS)
+  ],
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON,
+)
+
+# if SAIVS
+# if DASHSAI
+# bin_PROGRAMS += syncd_dash
+# syncd_dash_SOURCES = $(syncd_SOURCES)
+# syncd_dash_CPPFLAGS = $(syncd_CPPFLAGS)
+# syncd_dash_CXXFLAGS = $(syncd_CXXFLAGS)
+# syncd_dash_LDADD = libSyncd.a $(top_srcdir)/lib/libSaiRedis.a -L$(top_srcdir)/meta/.libs -lsaimetadata -lsaimeta \
+# 			  -ldl -lhiredis -lswsscommon -lsai -lprotobuf -lpiprotobuf -lpiprotogrpc -lgrpc++ -lpthread -lzmq $(CODE_COVERAGE_LIBS) $(EXTRA_LIBSAI_LDFLAGS)
+# syncd_dash_LDFLAGS = $(syncd_LDFLAGS)
+# endif
+# endif
+cc_binary(
+  name = "syncd_dash",
+  
+)

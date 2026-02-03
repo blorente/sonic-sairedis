@@ -1,4 +1,6 @@
-#include "config.h"
+// TODO BL: make this compatible
+// #include "config.h"
+#include "config.bazel.h"
 #include "VendorSai.h"
 
 #include "meta/sai_serialize.h"

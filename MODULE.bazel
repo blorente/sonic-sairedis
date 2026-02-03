@@ -1,5 +1,7 @@
 module(name = "sonic-sairedis")
 
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "bazel_lib", version = "3.1.1")
@@ -17,6 +19,13 @@ bazel_dep(name = "rules_distroless", version = "0.0.0")
 local_path_override(
     module_name = "rules_distroless",
     path = "../rules_distroless"
+)
+
+http_archive(
+    name = "com_google_googletest",
+    sha256 = "78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399",
+    strip_prefix = "googletest-1.16.0",
+    urls = ["https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz"],
 )
 
 apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")

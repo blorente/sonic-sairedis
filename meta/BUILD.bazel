@@ -21,7 +21,7 @@ cc_library(
     "@sai//experimental:header_lib",
   ],
   cxxopts = CODE_COVERAGE_CPPFLAGS,
-  copts = DBGFLAGS + AM_CFLAGS + ["-ansi"] + CODE_COVERAGE_CFLAGS,
+  copts = DBGFLAGS + AM_CFLAGS + ["-ansi"] + CODE_COVERAGE_CFLAGS + ["-fPIC"], # BL: That fPIC is added so that maybe we can build an .so for symbol intercalation?
 )
 
 filegroup(
