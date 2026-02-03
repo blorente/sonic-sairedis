@@ -1,5 +1,5 @@
 [submodule "SAI"]
 	path = SAI
-	url = https://github.com/blorente/SAI.git
+	url = https://github.com/thesayyn/SAI.git
 	ignore = dirty
 	branch = v1.3
