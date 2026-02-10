@@ -59,13 +59,16 @@ libsyncd_srcs = [
 libsyncd_copts = select({
    "//:asan": ["-DASAN_ENABLED"],
    "//conditions:default": [],
-}) + DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+}) + DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS
 
-libsyncd_deps = select({
-  "//:vslib": ["//vslib:saivs"],
-  "//conditions:default": [],
-}) + [
-  "//meta:saimeta",
+# TODO parameterize accoriding to //:saivs
+# libsyncd_deps = select({
+#   "//:saivs": ["//vslib:libsaivs"],
+#   "//conditions:default": ["//vslib:libsaivs"],
+# }) + [
+libsyncd_deps = [
+  "//vslib:libsaivs",
+  "//meta:libsaimeta",
 ]
 
 libsyncd_cxxopts = CODE_COVERAGE_CPPFLAGS
@@ -75,7 +78,7 @@ cc_library(
   srcs = libsyncd_srcs,
   hdrs = [":headers"],
   includes = ["syncd"],
-  copts = libsync_copts,
+  copts = libsyncd_copts,
 # TODO BL: How does this work?
 # if SAIVS
 # SAILIB=-L$(top_srcdir)/vslib/.libs -lsaivs
@@ -87,24 +90,28 @@ cc_library(
   visibility = ["//syncd:__subpackages__"],
 )
 
+syncd_ldflags = [
+    "-rdynamic",
+] + EXTRA_LIBSAI_FLAGS
+
+syncd_srcs = select({
+   "//:asan": [
+       "Asan.cpp",
+   ],
+   "//conditions:default": [],
+}) + [
+  "main.cpp",
+]
+
 cc_binary(
   name = "syncd",
-  srcs = select({
-     "//:asan": [
-         "Asan.cpp",
-     ],
-     "//conditions:default": [],
-  }) + [
-    "main.cpp",
-  ],
+  srcs = syncd_srcs,
   deps = [
     ":libsyncd",
     "//lib:sairedis",
     "//meta:saimeta",
   ] + CODE_COVERAGE_LIBS,
-  linkopts = [
-    "-rdynamic",
-  ] + EXTRA_LIBSAI_FLAGS,
+  linkopts = syncd_ldflags,
   cxxopts = CODE_COVERAGE_CPPFLAGS,
   copts = select({
      "//:asan": CFLAGS_ASAN,
@@ -131,7 +138,9 @@ cc_library(
     ":headers",
   ],
   deps = [
-    "//meta:saimeta",
+    "//meta:libsaimeta",
+    "//lib:libsairedis",
+    "@sonic_swss_common//:libswsscommon",
   ],
   cxxopts = CODE_COVERAGE_CPPFLAGS,
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
@@ -145,7 +154,7 @@ cc_binary(
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
   deps = [
     ":libsyncd_request_shutdown",
-    "//lib:sairedis",
+    "//lib:libsairedis",
   ] + CODE_COVERAGE_LIBS,
 )
 
@@ -175,31 +184,31 @@ cc_library(
 )
 
 cc_test(
-  name = "tests",
+  name = "syncd_tests",
   srcs = ["tests.cpp"],
-  linkopts = [
-    # syncd_tests_LDFLAGS = -Wl,-rpath,$(top_srcdir)/lib/.libs -Wl,-rpath,$(top_srcdir)/meta/.libs
+  dynamic_deps = [
+     "@sonic_swss_common//:libswsscommon_archive",
   ],
   deps = [
     ":libsyncd",
-# syncd_tests_LDADD = libSyncd.a -lhiredis -lswsscommon -lpthread -L$(top_srcdir)/lib/.libs -lsairedis \
-# 			  -L$(top_srcdir)/meta/.libs -lsaimetadata -lsaimeta -lzmq $(CODE_COVERAGE_LIBS)
   ],
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON,
+  # TODO BL: This doesn't work yet, because we need a solution for libswsscommon_shared
+  tags = ["manual"],
 )
 
 # if SAIVS
 # if DASHSAI
-# bin_PROGRAMS += syncd_dash
 # syncd_dash_SOURCES = $(syncd_SOURCES)
-# syncd_dash_CPPFLAGS = $(syncd_CPPFLAGS)
-# syncd_dash_CXXFLAGS = $(syncd_CXXFLAGS)
 # syncd_dash_LDADD = libSyncd.a $(top_srcdir)/lib/libSaiRedis.a -L$(top_srcdir)/meta/.libs -lsaimetadata -lsaimeta \
 # 			  -ldl -lhiredis -lswsscommon -lsai -lprotobuf -lpiprotobuf -lpiprotogrpc -lgrpc++ -lpthread -lzmq $(CODE_COVERAGE_LIBS) $(EXTRA_LIBSAI_LDFLAGS)
-# syncd_dash_LDFLAGS = $(syncd_LDFLAGS)
 # endif
 # endif
 cc_binary(
   name = "syncd_dash",
-  
+  srcs = syncd_srcs,
+  deps = [":libsyncd"],
+  copts = libsyncd_copts,
+  cxxopts = libsyncd_cxxopts,
+  linkopts = syncd_ldflags,
 )

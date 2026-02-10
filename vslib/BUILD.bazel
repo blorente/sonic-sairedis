@@ -131,7 +131,7 @@ cc_library(
 )
 
 cc_library(
-  name = "saivs",
+  name = "libsaivs",
   srcs = [
     "sai_vs_acl.cpp",
     "sai_vs_bfd.cpp",
@@ -211,7 +211,7 @@ cc_test(
   name = "tests",
   srcs = ["tests.cpp"],
   deps = [
-    ":saivs",
+    ":libsaivs",
     "@sonic_swss_common//:libswsscommon",
   ],
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON,
