@@ -1,6 +1,6 @@
 # CXXFLAGS that we need for Bazel specifically. Not present in the Makefile
 CXXFLAGS_COMMON_BAZEL = [
-  # TODO BL: rules_distroless introduces a bunch of include directories that don't exist
+  # TODO: rules_distroless introduces a bunch of include directories that don't exist
   # so we need to disable that warning or else -Werror will fail the build.
   "-Wno-missing-include-dirs",
 ]
@@ -54,7 +54,7 @@ CXXFLAGS_COMMON_MAKEFILE = [
 
 CXXFLAGS_COMMON = CXXFLAGS_COMMON_MAKEFILE + CXXFLAGS_COMMON_BAZEL
 
-# TODO BL: Figure out where to get these.
+# TODO: Fill these out when we support debugging and code coverage
 CODE_COVERAGE_CFLAGS = []
 CODE_COVERAGE_CPPFLAGS = []
 CODE_COVERAGE_CXXFLAGS = []

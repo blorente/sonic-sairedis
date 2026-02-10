@@ -4,8 +4,8 @@ load("@tar.bzl", "tar", "mutate")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON")
 
-AM_CFLAGS = [] # $(SAIINC)
-AM_CXXFLAGS = [] # $(SAIINC) -I$(top_srcdir)/lib
+AM_CFLAGS = []
+AM_CXXFLAGS = []
 
 cc_library(
   name = "libsaimetadata",
@@ -69,11 +69,11 @@ cc_library(
   ],
   includes = [
     "../lib",
-    # TODO BL: Some headers in `sonic-swss` want to include these headers without the meta/ prefix.
-    #          To allow that, we need to add `-isystem <execroot>/<sairedis path>/meta` to the CLI,
-    #          and this is the way we accomplish that.
-    #          The alternative would be to prefix every header with `meta`.
-    #          (e.g. `sai_serialize.h` becomes `meta/sai_serialize.h`)
+    # Some headers in `sonic-swss` want to include these headers without the meta/ prefix.
+    # To allow that, we need to add `-isystem <execroot>/<sairedis path>/meta` to the CLI,
+    # and this is the way we accomplish that.
+    # The alternative would be to prefix every header with `meta` in their include statements.
+    # (e.g. `#include "sai_serialize.h"` becomes `#include "meta/sai_serialize.h"`)
     "../meta",
   ],
   deps = [
@@ -112,11 +112,8 @@ cc_binary(
   linkshared = 1,
 )
 
-# TODO BL: Because we don't want to name all the headers one by one in the mtree,
-#          we create a directory at the right path.
-# meta/sai*.h usr/include/sai
-# meta/Sai*.h usr/include/sai
-# SAI/meta/sai*.h usr/include/sai
+# Because we don't want to name all the headers one by one in the mtree,
+# we create a directory at the right path.
 copy_to_directory(
   name = "deb_headers_directory",
   out = "usr/include/sai",
@@ -127,11 +124,9 @@ copy_to_directory(
   include_external_repositories = ["sai*"],
 )
 
-# usr/lib/*/libsaimetadata.so
-# usr/lib/*/libsaimeta.so
 copy_to_directory(
   name = "deb_libs_directory",
-  # TODO BL: parameterize based on target triple
+  # TODO: parameterize based on target triple
   out = "usr/lib/x86_64-linux-gnu",
   srcs = [
     ":saimetadata",
@@ -139,8 +134,10 @@ copy_to_directory(
   ],
 )
 
-# TODO BL: we can probably break this down, but this is straight from debian/libsaimetadatata-dev.install
-# TODO BL: We may need to also do the files in `debian/libsaimetadata-dev.links`, which create symlinks to .0
+
+# TODO: We may need to also do the files in `debian/libsaimetadata-dev.links`, which create symlinks to .0:
+# /usr/lib/${DEB_HOST_MULTIARCH}/libsaimetadata.so.0 /usr/lib/${DEB_HOST_MULTIARCH}/libsaimetadata.so
+# /usr/lib/${DEB_HOST_MULTIARCH}/libsaimeta.so.0 /usr/lib/${DEB_HOST_MULTIARCH}/libsaimeta.so
 tar(
   name = "libsaimetadata_dev_pkg",
   srcs = [

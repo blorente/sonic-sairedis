@@ -19,23 +19,13 @@ sh_binary(
 )
 
 run_binary(
-  name = "create_config.gen",
+  name = "config",
   tool = ":create_config",
-  args = ["$(execpath config.h.gen)"],
-  outs = ["config.h.gen"],
+  args = ["$(execpath config.h)"],
+  outs = ["config.h"],
+  # This file bakes in the commits for sairedis and SAI,
+  # so it always must be stamped.
+  # It only invalidates a small number of downstream files, so we think it's acceptable.
   stamp = 1,
 )
 
-write_source_file(
-    name = "config.bazel.h.update",
-    out_file = "config.bazel.h",
-    in_file = ":create_config.gen",
-    diff_test_failure_message = "Bazel config header (config.bazel.h) out of date; please run {{TARGET}} to update."
-)
-
-# TODO BL: This depends on having run `bazel run //:config.bazel.h.update`.
-# We should encode that invariant.
-filegroup(
-  name = "config",
-  srcs = [":config.bazel.h"],
-)
