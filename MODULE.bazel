@@ -16,7 +16,7 @@ register_toolchains("@sonic-build-infra//toolchains/gcc:host_gcc_toolchain")
 bazel_dep(name = "rules_distroless", version = "0.0.0")
 local_path_override(
     module_name = "rules_distroless",
-    path = "../../bazel-contrib/rules_distroless"
+    path = "../rules_distroless"
 )
 
 apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
@@ -38,7 +38,7 @@ apt.sources_list(
 bazel_dep(name = "sonic-swss-common", version = "0.0.0", repo_name = "sonic_swss_common")
 local_path_override(
     module_name = "sonic-swss-common",
-    path = "../../sonic-net/sonic-swss-common",
+    path = "../sonic-swss-common",
 )
 
 bazel_dep(name = "sai", version = "0.0.0")
