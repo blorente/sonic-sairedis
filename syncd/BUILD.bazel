@@ -1,5 +1,6 @@
 load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON", "CFLAGS_ASAN", "EXTRA_LIBSAI_FLAGS")
-load("@tar.bzl", "tar")
+load("@tar.bzl", "tar", "mutate")
+load("@rules_distroless//distroless:defs.bzl", "flatten")
 
 AM_CXXFLAGS = [] # $(SAIINC) -I$(top_srcdir)/lib -I$(top_srcdir)/vslib
  
@@ -189,6 +190,14 @@ cc_library(
   linkstatic = False,
 )
 
+cc_shared_library(
+  name = "libmdio_ipc_client.so",
+  shared_lib_name = "libMdioIpcClient.so",
+  deps = [
+    ":libmdio_ipc_client.a",
+  ],
+)
+
 cc_test(
   name = "syncd_tests",
   srcs = ["tests.cpp"],
@@ -219,23 +228,18 @@ cc_binary(
   linkopts = syncd_ldflags,
 )
 
-
-# Syncdir install
-# usr/bin/saisdkdump
-# usr/bin/saidiscovery
-# usr/bin/saiasiccmp
-# usr/bin/syncd*
-# syncd/scripts/* usr/bin
-# usr/lib/*/libMdioIpcClient.so.*
-
 tar(
-  name = "syncd_pkg",
+  name = "syncd_loose_files",
   srcs = [
     "//saidump:saidump",
     "//saiplayer:saiplayer",
     "//saisdkdump:saisdkdump",
     "//saidiscovery:saidiscovery",
     "//saiasiccmp:saiasiccmp",
+    ":syncd",
+    ":syncd_request_shutdown",
+    ":syncd_dash",
+    ":libmdio_ipc_client.so",
   ],
   mtree = [
     "./usr/bin/saidump type=file contents=$(location //saidump:saidump)",
@@ -243,12 +247,31 @@ tar(
     "./usr/bin/saisdkdump type=file contents=$(location //saisdkdump:saisdkdump)",
     "./usr/bin/saidiscovery type=file contents=$(location //saidiscovery:saidiscovery)",
     "./usr/bin/saiasiccmp type=file contents=$(location //saiasiccmp:saiasiccmp)",
-# "./usr/bin/syncd*
-# "./usr/lib/*/libMdioIpcClient.so.*
-# "./syncd/scripts/*  usr/bin
+
+    "./usr/bin/syncd type=file contents=$(location :syncd)",
+    "./usr/bin/syncd_dash type=file contents=$(location :syncd_dash)",
+    "./usr/bin/syncd_request_shutdown type=file contents=$(location :syncd_request_shutdown)",
+
+    # TODO Parameterize based on target platform
+    "./usr/lib/x86_64-linux-gnu/libMdioIpcClient.so type=file contents=$(location :libmdio_ipc_client.so)",
+    "./usr/lib/x86_64-linux-gnu/libMdioIpcClient.so.0 type=link link=./usr/lib/x86_64-linux-gnu/libMdioIpcClient.so",
   ],
 )
 
-# Syncdir links
-#! /usr/bin/dh-exec
-# /usr/lib/${DEB_HOST_MULTIARCH}/libMdioIpcClient.so.0 /usr/lib/${DEB_HOST_MULTIARCH}/libMdioIpcClient.so
+# "./syncd/scripts/*  usr/bin
+tar(
+  name = "syncd_scripts",
+  srcs = glob(["scripts/**"]),
+  mutate = mutate(
+    strip_prefix = package_name(),
+    package_dir = "./usr/bin",
+  ),
+)
+
+flatten(
+  name = "syncd_pkg",
+  tars = [
+    ":syncd_loose_files",
+    ":syncd_scripts",
+  ],
+)
