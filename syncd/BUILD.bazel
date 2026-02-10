@@ -91,6 +91,8 @@ cc_library(
   visibility = [
     "//syncd:__subpackages__",
     "//saiplayer:__subpackages__",
+    "//saidiscovery:__subpackages__",
+    "//saiasiccmp:__subpackages__",
   ],
 )
 
@@ -232,13 +234,15 @@ tar(
     "//saidump:saidump",
     "//saiplayer:saiplayer",
     "//saisdkdump:saisdkdump",
+    "//saidiscovery:saidiscovery",
+    "//saiasiccmp:saiasiccmp",
   ],
   mtree = [
     "./usr/bin/saidump type=file contents=$(location //saidump:saidump)",
     "./usr/bin/saiplayer type=file contents=$(location //saiplayer:saiplayer)",
     "./usr/bin/saisdkdump type=file contents=$(location //saisdkdump:saisdkdump)",
-# "./usr/bin/saidiscovery
-# "./usr/bin/saiasiccmp
+    "./usr/bin/saidiscovery type=file contents=$(location //saidiscovery:saidiscovery)",
+    "./usr/bin/saiasiccmp type=file contents=$(location //saiasiccmp:saiasiccmp)",
 # "./usr/bin/syncd*
 # "./usr/lib/*/libMdioIpcClient.so.*
 # "./syncd/scripts/*  usr/bin
