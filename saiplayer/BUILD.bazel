@@ -1,0 +1,38 @@
+load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON", "CFLAGS_ASAN", "EXTRA_LIBSAI_FLAGS")
+
+AM_CXXFLAGS = [] #$(SAIINC) -I$(top_srcdir)/lib
+
+cc_library(
+  name = "libsaiplayer",
+  hdrs = [
+    "CommandLineOptions.h",
+    "CommandLineOptionsParser.h",
+    "SaiPlayer.h",
+  ],
+  srcs = [
+    "CommandLineOptions.cpp",
+    "CommandLineOptionsParser.cpp",
+    "SaiPlayer.cpp",
+  ],
+  deps = [
+    "//lib:libsairedis",
+    "//meta:libsaimeta",
+    "//syncd:libsyncd",
+  ],
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+)
+
+cc_binary(
+  name = "saiplayer",
+  srcs = ["saiplayer_main.cpp"],
+  deps = [
+    ":libsaiplayer",
+  ],
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+  visibility = ["//syncd:__subpackages__"],
+)
+
+# TODO BL: I have no idea what noinst is, but we can probably ignore it for now.
+# noinst_LIBRARIES = libsaidump.a

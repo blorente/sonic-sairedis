@@ -1,0 +1,24 @@
+load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON", "CFLAGS_ASAN", "EXTRA_LIBSAI_FLAGS")
+
+
+# TODO BL:
+# if SAIVS
+# SAILIB=-L$(top_srcdir)/vslib/.libs -lsaivs
+# else
+# SAILIB=-lsai
+# endif
+
+AM_CXXFLAGS = [] #$(SAIINC) -I$(top_srcdir)/lib
+
+cc_binary(
+  name = "saisdkdump",
+  srcs = ["saisdkdump.cpp"],
+  deps = [
+    "//lib:libsairedis",
+    "//meta:libsaimeta",
+  ], # TODO BL: EXTRA_LIBSAI_LDFLAGS
+  cxxopts = CODE_COVERAGE_CPPFLAGS,
+  copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
+  visibility = ["//syncd:__subpackages__"],
+)
+

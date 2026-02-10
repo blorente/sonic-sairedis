@@ -1,4 +1,5 @@
 load("//:common.bzl", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "CODE_COVERAGE_CFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS", "CXXFLAGS_COMMON", "CFLAGS_ASAN", "EXTRA_LIBSAI_FLAGS")
+load("@tar.bzl", "tar")
 
 AM_CXXFLAGS = [] # $(SAIINC) -I$(top_srcdir)/lib -I$(top_srcdir)/vslib
  
@@ -87,7 +88,10 @@ cc_library(
 # endif
   deps = libsyncd_deps,
   cxxopts = libsyncd_cxxopts,
-  visibility = ["//syncd:__subpackages__"],
+  visibility = [
+    "//syncd:__subpackages__",
+    "//saiplayer:__subpackages__",
+  ],
 )
 
 syncd_ldflags = [
@@ -212,3 +216,35 @@ cc_binary(
   cxxopts = libsyncd_cxxopts,
   linkopts = syncd_ldflags,
 )
+
+
+# Syncdir install
+# usr/bin/saisdkdump
+# usr/bin/saidiscovery
+# usr/bin/saiasiccmp
+# usr/bin/syncd*
+# syncd/scripts/* usr/bin
+# usr/lib/*/libMdioIpcClient.so.*
+
+tar(
+  name = "syncd_pkg",
+  srcs = [
+    "//saidump:saidump",
+    "//saiplayer:saiplayer",
+    "//saisdkdump:saisdkdump",
+  ],
+  mtree = [
+    "./usr/bin/saidump type=file contents=$(location //saidump:saidump)",
+    "./usr/bin/saiplayer type=file contents=$(location //saiplayer:saiplayer)",
+    "./usr/bin/saisdkdump type=file contents=$(location //saisdkdump:saisdkdump)",
+# "./usr/bin/saidiscovery
+# "./usr/bin/saiasiccmp
+# "./usr/bin/syncd*
+# "./usr/lib/*/libMdioIpcClient.so.*
+# "./syncd/scripts/*  usr/bin
+  ],
+)
+
+# Syncdir links
+#! /usr/bin/dh-exec
+# /usr/lib/${DEB_HOST_MULTIARCH}/libMdioIpcClient.so.0 /usr/lib/${DEB_HOST_MULTIARCH}/libMdioIpcClient.so
