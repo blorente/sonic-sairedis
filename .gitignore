@@ -134,5 +134,3 @@ pyext/pysairedis.py
 # Bazel #
 #########
 bazel-*
-# TODO BL: this is only until I figure out a better way to bundle this doxygen
-doxygen_bin
