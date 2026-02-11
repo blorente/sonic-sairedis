@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//:common.bzl", "CXXFLAGS_COMMON", "CODE_COVERAGE_CPPFLAGS", "CODE_COVERAGE_CXXFLAGS", "DBGFLAGS", "CODE_COVERAGE_LIBS")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@tar.bzl", "tar", "mutate")
+load("@rules_distroless//distroless:defs.bzl", "flatten")
 
 filegroup(
   name = "all_headers",
@@ -207,6 +210,15 @@ cc_library(
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON + CODE_COVERAGE_CXXFLAGS,
 )
 
+# TODO BL: Migrate to cc_binary
+# cc_shared_library(
+cc_binary(
+  name = "libsaivs_shared",
+  deps = [":libsaivs"],
+  linkstatic = True,
+  linkshared = True,
+)
+
 cc_test(
   name = "tests",
   srcs = ["tests.cpp"],
@@ -217,3 +229,46 @@ cc_test(
   copts = DBGFLAGS + AM_CXXFLAGS + CXXFLAGS_COMMON,
 )
 
+# Because we don't want to name all the headers one by one in the mtree,
+# we create a directory at the right path.
+copy_to_directory(
+  name = "deb_headers_directory",
+  out = "usr/include/sai",
+  srcs = [
+    "@sai//inc:deb_headers",
+    "@sai//experimental:deb_headers",
+  ],
+  include_external_repositories = ["sai*"],
+)
+
+tar(
+  name = "libsaivs_pkg",
+  srcs = [":libsaivs_shared"],
+  mtree = [
+    # TODO BL: Parameterize based on target platform
+    "./usr/lib/x86_64-linux-gnu/libsaivs.so type=file contents=$(location :libsaivs_shared)",
+    "./usr/lib/x86_64-linux-gnu/libsaivs.so.0 type=link link=./usr/lib/x86_64-linux-gnu/libsaivs.so",
+  ],
+  visibility = ["//visibility:public"],
+)
+
+tar(
+  name = "libsaivs_dev_files",
+  srcs = [
+    ":deb_headers_directory",
+    ":saivs.h",
+  ],
+  mutate = mutate(
+    strip_prefix = package_name(),
+    package_dir = ".",
+  ),
+)
+
+flatten(
+  name = "libsaivs_dev_pkg",
+  tars = [
+    ":libsaivs_dev_files",
+    ":libsaivs_pkg",
+  ],
+  visibility = ["//visibility:public"],
+)
