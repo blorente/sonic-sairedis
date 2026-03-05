@@ -81,6 +81,7 @@ apt.install(
     suites = [
         "bookworm",
         "bookworm-updates",
+        "bookworm-security",
     ],
 )
 apt.lock(into = ":packages.lock")
