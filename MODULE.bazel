@@ -55,6 +55,12 @@ local_path_override(
     path = "../sonic-swss-common",
 )
 
+bazel_dep(name = "libnl3", version = "3.7.0")
+local_path_override(
+    module_name = "libnl3",
+    path = "../sonic-buildimage/src/libnl3",
+)
+
 bazel_dep(name = "sai", version = "0.0.0")
 local_path_override(
     module_name = "sai",
